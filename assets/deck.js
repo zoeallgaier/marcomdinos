@@ -37,7 +37,6 @@ const CITED = [
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const pad = (n) => String(n).padStart(2, '0');
-const redact = (text) => text.replace(/\[\[(.+?)\]\]/g, '<span class="redact">$1</span>');
 
 function voteUrl() {
   const local = !location.protocol.startsWith('http') || /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname);
@@ -83,7 +82,7 @@ function titleSlide(qr) {
     </section>`;
 }
 
-function dinoSlide({ dino }, qr) {
+function dinoSlide({ dino }) {
   const bars = ROSTER.map((name) => `
     <li class="bar" data-name="${name}">
       <span class="bar__name">${name}</span>
@@ -96,10 +95,6 @@ function dinoSlide({ dino }, qr) {
     <section class="slide slide--dino" data-dino="${dino.id}">
       <figure class="specimen">
         <img src="assets/img/${dino.id}.jpg" alt="Illustration of a ${dino.species}">
-        <div class="specimen__vote">
-          <div class="qr">${qr}</div>
-          <p class="label">scan to vote<br><strong>who is this?</strong></p>
-        </div>
       </figure>
       <div class="sheet">
         <h2 class="sheet__species enter">${dino.species}</h2>
@@ -107,7 +102,7 @@ function dinoSlide({ dino }, qr) {
           <span class="label">identified as</span>
           <span class="sheet__name"></span>
         </div>
-        <ol class="facts enter">${dino.facts.map((f) => `<li><span>${redact(f)}</span></li>`).join('')}</ol>
+        <ol class="facts enter">${dino.facts.map((f) => `<li><span>${f}</span></li>`).join('')}</ol>
         <div class="poll enter">
           <p class="label poll__head"><span>the room says</span><span class="poll__count">0 votes</span></p>
           <ol class="poll__bars">${bars}</ol>
@@ -137,11 +132,11 @@ function citedSlide() {
 /* —— Render —— */
 const stage = $('.stage');
 const url = voteUrl();
-const bigQr = qrSvg(url);
+const qr = qrSvg(url);
 
 stage.innerHTML = SLIDES.map((s) => {
-  if (s.kind === 'title') return titleSlide(bigQr);
-  if (s.kind === 'dino') return dinoSlide(s, bigQr);
+  if (s.kind === 'title') return titleSlide(qr);
+  if (s.kind === 'dino') return dinoSlide(s);
   if (s.kind === 'results') return resultsSlide();
   return citedSlide();
 }).join('');
@@ -150,7 +145,7 @@ const slideEls = $$('.slide', stage);
 
 function renderDino(state, id) {
   const el = $(`[data-dino="${id}"]`, stage);
-  const { counts, total } = Live.tally(state, id);
+  const { counts, total } = Live.tally(state, id, ANSWERS[id]);
   const answer = state.revealed[id];
 
   $('.poll__count', el).textContent = `${total} ${total === 1 ? 'vote' : 'votes'}`;
@@ -163,7 +158,6 @@ function renderDino(state, id) {
 
   const wasRevealed = el.classList.contains('is-revealed');
   el.classList.toggle('is-revealed', Boolean(answer));
-  $$('.redact', el).forEach((r) => r.classList.toggle('is-open', Boolean(answer)));
   if (Boolean(answer) !== wasRevealed) {
     $('.sheet__name', el).innerHTML = answer ? `<span>${answer}</span>${ASIDES[id] ? `<span class="sheet__aside">${ASIDES[id]}</span>` : ''}` : '';
   }
@@ -171,7 +165,7 @@ function renderDino(state, id) {
 
 function renderReport(state) {
   const rows = DINOS.map((dino, i) => {
-    const { counts, total } = Live.tally(state, dino.id);
+    const { counts, total } = Live.tally(state, dino.id, ANSWERS[dino.id]);
     const right = counts[ANSWERS[dino.id]];
     return { dino, n: i + 1, right, total, pct: total ? Math.round((right / total) * 100) : null };
   });

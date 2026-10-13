@@ -95,7 +95,6 @@ body {
 }
 
 .specimen {
-  position: relative;
   margin: 0;
   overflow: hidden;
 }
@@ -105,19 +104,6 @@ body {
   object-fit: cover;
 }
 
-.specimen__vote {
-  position: absolute;
-  left: 32px;
-  bottom: 32px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--bg);
-  padding: 14px 20px 14px 14px;
-}
-.specimen__vote .qr { width: 104px; }
-.specimen__vote p { margin: 0; font-size: 15px; line-height: 1.5; }
-.specimen__vote strong { font-weight: 400; color: var(--accent); }
 
 .sheet {
   display: flex;

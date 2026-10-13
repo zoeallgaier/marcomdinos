@@ -16,7 +16,6 @@ const ROSTER = [
   'Leah B.', 'Leah K.', 'Lindsay', 'Monica', 'Zoe',
 ];
 
-// Facts wrap name mentions in [[ ]] — redacted until the reveal.
 const DINOS = [
   {
     id: 'cryolophosaurus',
@@ -32,7 +31,7 @@ const DINOS = [
     species: 'Kamuysaurus',
     facts: [
       'Named for the Ainu (Indigenous Japanese) word for deity. Accurate.',
-      'Japan’s most complete dinosaur skeleton, just like [[Lindsay’s]] work.',
+      'Japan’s most complete dinosaur skeleton, just like her work.',
       'Died at sea, came back 72 million years later looking flawless. Very Elden Ring.',
     ],
   },
@@ -96,7 +95,7 @@ const DINOS = [
     facts: [
       'Utah’s state dinosaur!',
       'Nine-inch claw on each foot. Never has to say anything twice.',
-      'Pack hunter (but we all know [[Leah]] carries the whole pack).',
+      'Pack hunter (but we all know she carries the whole pack).',
     ],
   },
   {

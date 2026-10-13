@@ -131,6 +131,7 @@ body {
   text-align: center;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
+.name--wide { grid-column: 1 / -1; }
 .name:hover { border-color: var(--accent); color: var(--accent); }
 .name.is-picked {
   background: var(--accent);
@@ -179,6 +180,7 @@ body {
   display: grid;
   gap: 6px;
 }
+.bars[hidden] { display: none; }
 .bar {
   display: grid;
   grid-template-columns: 70px 1fr 24px;
@@ -207,7 +209,8 @@ body {
   line-height: 0.95;
   margin: 8px 0 14px;
 }
-.waiting p { font-size: 15px; line-height: 1.6; }
+.waiting p,
+.who p { font-size: 15px; line-height: 1.6; margin: 0 0 20px; }
 
 .ledger {
   list-style: none;
@@ -240,6 +243,9 @@ body {
 }
 .follow { font-size: 12px; color: var(--accent); }
 
+.drawer__record { margin-bottom: 6px; }
+.drawer__me button { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
 .chips {
   list-style: none;
   margin: 0 0 16px;
@@ -258,6 +264,7 @@ body {
 .chip.is-voted::after { content: ' ·'; color: var(--accent); }
 .chip.is-right { color: var(--correct); border-color: var(--correct); }
 .chip.is-wrong { color: var(--accent); border-color: var(--accent); }
+.chip.is-mine { border-style: dashed; }
 .chip--record { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 /* —— Toast —— */

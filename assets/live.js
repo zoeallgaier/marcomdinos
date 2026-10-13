@@ -4,7 +4,9 @@
    tallies, reveals and "current slide" without a server of our own.
 
    Messages:
-     { t: 'v', v: voterId, d: dinoId, g: guess }   vote (latest per voter wins)
+     { t: 'v', v: voterId, w: who, d: dinoId, g: guess }
+                                                    vote (latest per voter wins);
+                                                    who = voter's own roster name or 'guest'
      { t: 's', d: dinoId | 'results' | null }       presenter moved
      { t: 'r', d: dinoId, a: name }                 reveal
      { t: 'h', d: dinoId }                          un-reveal
@@ -20,8 +22,8 @@ const Live = (() => {
   function apply(state, m) {
     switch (m.t) {
       case 'v':
-        if (!DINOS.some((d) => d.id === m.d) || !ROSTER.includes(m.g)) return;
-        (state.votes[m.d] ||= {})[m.v] = m.g;
+        if (!DINOS.some((d) => d.id === m.d) || !ROSTER.includes(m.g) || m.g === m.w) return;
+        (state.votes[m.d] ||= {})[m.v] = { g: m.g, w: m.w };
         break;
       case 's':
         state.current = m.d;
@@ -39,12 +41,17 @@ const Live = (() => {
     }
   }
 
-  // Counts per roster name for one dino.
-  function tally(state, dinoId) {
+  // Counts per roster name for one dino. The dino's owner knows the
+  // answer, so their ballot doesn't count.
+  function tally(state, dinoId, owner) {
     const counts = Object.fromEntries(ROSTER.map((n) => [n, 0]));
-    const ballots = state.votes[dinoId] || {};
-    for (const guess of Object.values(ballots)) counts[guess] += 1;
-    return { counts, total: Object.keys(ballots).length };
+    let total = 0;
+    for (const { g, w } of Object.values(state.votes[dinoId] || {})) {
+      if (owner && w === owner) continue;
+      counts[g] += 1;
+      total += 1;
+    }
+    return { counts, total };
   }
 
   function publish(msg) {

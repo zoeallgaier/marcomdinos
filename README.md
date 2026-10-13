@@ -7,7 +7,7 @@ A field guide to the IA MarCom team, identified down to the species. Interactive
 
 ## Running it
 
-Open the deck on the presenting machine. The room scans the QR code on the title slide (or the small one on every dinosaur slide).
+Open the deck on the presenting machine. The room scans the QR code on the title slide before you start.
 
 | Key | Does |
 | --- | --- |
@@ -17,6 +17,8 @@ Open the deck on the presenting machine. The room scans the QR code on the title
 | F | Fullscreen |
 
 Move the mouse for the toolbar: reveal, fullscreen, **reset votes** (clears the room after a rehearsal) and connection status.
+
+On first scan, phones ask who you are. Your own name is hidden as an option, and your vote on your own dinosaur doesn't count. Votes stay anonymous. Phones show the room's results after each reveal; the live count is on the big screen.
 
 Phones follow the presenter automatically. People can browse other dinosaurs from the chips at the bottom and tap "back to live" to rejoin.
 

@@ -56,20 +56,6 @@ button {
   pointer-events: none;
 }
 
-/* Redacted name mentions inside facts. */
-.redact {
-  background: var(--text);
-  color: transparent;
-  border-radius: 2px;
-  padding: 0 0.15em;
-  user-select: none;
-}
-.redact.is-open {
-  background: none;
-  color: var(--accent);
-  user-select: auto;
-}
-
 /* —— Motion —— */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
