@@ -8,7 +8,7 @@ const CONFIG = {
   topic: 'marcom-dinos-9aebcdf59561',
   // Firebase Realtime Database URL. When set, votes go through Firebase
   // (no daily caps). Leave empty to fall back to ntfy.sh.
-  firebase: '',
+  firebase: 'https://marcom-dinos-default-rtdb.firebaseio.com',
   relay: 'https://ntfy.sh',
   // Used for the QR code when the deck is opened locally (file:// or localhost).
   publicUrl: 'https://zoeallgaier.github.io/marcomdinos/',
