@@ -20,14 +20,16 @@ Keep one deck tab open while presenting. It's what tells phones which dinosaur i
 
 Move the mouse for the toolbar: reveal, fullscreen, **reset votes** (clears the room after a rehearsal) and connection status.
 
-Phones follow the presenter automatically. People can browse other dinosaurs from the chips at the bottom and tap "back to live" to rejoin.
+Phones follow the presenter automatically.
+
+Rehearse at `index.html?practice`. Everything works locally and nothing is sent, so rehearsals don't touch the live room or its limits.
 
 ## How the voting works
 
-There's no server. Every vote, reveal and slide change is a small JSON message on a public [ntfy.sh](https://ntfy.sh) topic (set in `assets/data.js`). The deck and every phone replay the same stream, so everyone sees the same live results.
+There's no server of our own. Every vote, reveal and slide change is a small JSON message on a shared list. The deck and every phone replay the same list, so everyone sees the same live results. `assets/data.js` picks the relay:
 
-- Messages expire from ntfy.sh after about 12 hours, so yesterday's rehearsal votes won't show up. Use **reset votes** to clear a same-day rehearsal.
-- Free ntfy.sh limits are per IP address. A room of ~15 on the same Wi-Fi is fine. For a much bigger crowd, ask people to use cellular.
+- **Firebase Realtime Database** (`CONFIG.firebase`, recommended). No daily caps. Create a free project, add a Realtime Database in test mode, and paste its URL into `CONFIG.firebase`. **reset votes** deletes the room. Test-mode rules expire after 30 days.
+- **ntfy.sh** (used when `CONFIG.firebase` is empty). Free, no account, but capped at 250 messages a day per IP address, resetting at midnight UTC. Messages expire after about 12 hours.
 - Anyone who knows the topic name can read or post to it. To start a completely fresh room, change `CONFIG.topic`.
 
 The answer key lives only in `assets/deck.js`. Phones learn each name at the reveal.

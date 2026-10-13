@@ -3,9 +3,12 @@
    NOT in here: the answer key lives in deck.js so phones can't peek. */
 
 const CONFIG = {
-  // ntfy.sh topic that carries votes. Anyone who knows it can read it,
-  // so it's random. Change it to start a completely fresh room.
+  // Room name. Anyone who knows it can read it, so it's random.
+  // Change it to start a completely fresh room.
   topic: 'marcom-dinos-9aebcdf59561',
+  // Firebase Realtime Database URL. When set, votes go through Firebase
+  // (no daily caps). Leave empty to fall back to ntfy.sh.
+  firebase: '',
   relay: 'https://ntfy.sh',
   // Used for the QR code when the deck is opened locally (file:// or localhost).
   publicUrl: 'https://zoeallgaier.github.io/marcomdinos/',

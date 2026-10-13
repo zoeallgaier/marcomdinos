@@ -205,30 +205,45 @@ const alertEl = $('.alert');
 
 function setAlert(text) {
   alertEl.textContent = text || '';
+  alertEl.dataset.kind = '';
   alertEl.classList.toggle('is-visible', Boolean(text));
 }
+
+// ?practice runs the whole deck without sending anything to the room.
+const PRACTICE = new URLSearchParams(location.search).has('practice');
 
 // Brief blips are normal. Only speak up if the stream stays down.
 let downTimer;
 const room = Live.connect({
   onChange: render,
+  send: !PRACTICE,
   onStatus(s) {
     statusEl.dataset.state = s;
-    statusEl.textContent = s;
+    statusEl.textContent = PRACTICE ? 'practice – not sending' : s;
     clearTimeout(downTimer);
     if (s === 'live') setAlert();
     else downTimer = setTimeout(() => setAlert('Votes aren’t coming through. Reconnecting…'), 5000);
   },
 });
 
-function send(msg) {
-  room.send(msg).catch(() => setAlert('Couldn’t reach the vote relay. Check the connection.'));
+// Every outgoing change goes through here so failures show on screen.
+function report(sent) {
+  sent.then(
+    () => alertEl.dataset.kind === 'send' && setAlert(),
+    (err) => {
+      setAlert(err.limited
+        ? `This network used its 250 free messages for today. Resets around ${Live.resetTime()}. Phones on cellular still work.`
+        : 'Couldn’t reach the vote relay. Check the connection.');
+      alertEl.dataset.kind = 'send';
+    },
+  );
 }
+
+const send = (msg) => report(room.send(msg));
 
 /* —— Navigation —— */
 let index = Math.min(Math.max((parseInt(location.hash.slice(1), 10) || 1) - 1, 0), SLIDES.length - 1);
 let built = 0; // clues showing on the current dino slide
-let announced;
 let announceTimer;
 
 function slideKey(s) {
@@ -237,15 +252,16 @@ function slideKey(s) {
   return null;
 }
 
-// Tell phones where we are, once the presenter stops clicking.
+// Tell phones where we are once the presenter settles on a slide. Every
+// message counts against the daily allowance, so stay quiet unless phones
+// would actually change: title and works cited don't need a message.
 function announce() {
   clearTimeout(announceTimer);
   announceTimer = setTimeout(() => {
     const key = slideKey(SLIDES[index]);
-    if (key === announced) return;
-    announced = key;
+    if (!key || key === room.state.current) return;
     send({ t: 's', d: key });
-  }, 500);
+  }, 1000);
 }
 
 function setBuilt(n) {
@@ -293,7 +309,9 @@ function fullscreen() {
 }
 
 function reset() {
-  if (confirm('Clear every vote and reveal for the whole room?')) send({ t: 'x' });
+  if (!confirm('Clear every vote and reveal for the whole room?')) return;
+  report(room.reset());
+  announce();
 }
 
 addEventListener('keydown', (e) => {

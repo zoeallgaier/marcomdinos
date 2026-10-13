@@ -1,24 +1,38 @@
 /* —— Live room ——
-   Every action is a tiny JSON message on one ntfy.sh topic. The deck and
-   every phone replay the same stream, so everyone ends up with the same
+   Every action is a tiny JSON message appended to one shared list. The deck
+   and every phone replay the same list, so everyone ends up with the same
    tallies, reveals and "current slide" without a server of our own.
+
+   Two relays, picked by CONFIG:
+     firebase  Firebase Realtime Database over its REST stream. No daily caps.
+     ntfy      ntfy.sh. Free, but 250 messages a day per network (IP).
 
    Messages:
      { t: 'v', v: voterId, d: dinoId, g: guess }   vote (latest per voter wins)
      { t: 's', d: dinoId | 'results' | null }       presenter moved
      { t: 'r', d: dinoId, a: name }                 reveal
      { t: 'h', d: dinoId }                          un-reveal
-     { t: 'x' }                                     reset the room */
+     { t: 'x' }                                     reset the room (ntfy only;
+                                                    Firebase deletes the list) */
 
 const Live = (() => {
-  const url = `${CONFIG.relay}/${CONFIG.topic}`;
+  const FIREBASE = Boolean(CONFIG.firebase);
+  const url = FIREBASE
+    ? `${CONFIG.firebase.replace(/\/$/, '')}/rooms/${CONFIG.topic}.json`
+    : `${CONFIG.relay}/${CONFIG.topic}`;
 
   function emptyState() {
     return { votes: {}, revealed: {}, current: null };
   }
 
+  function clear(state) {
+    state.votes = {};
+    state.revealed = {};
+    state.current = null;
+  }
+
   function apply(state, m) {
-    switch (m.t) {
+    switch (m?.t) {
       case 'v':
         if (!DINOS.some((d) => d.id === m.d) || !ROSTER.includes(m.g)) return;
         (state.votes[m.d] ||= {})[m.v] = m.g;
@@ -33,8 +47,7 @@ const Live = (() => {
         delete state.revealed[m.d];
         break;
       case 'x':
-        state.votes = {};
-        state.revealed = {};
+        clear(state);
         break;
     }
   }
@@ -47,40 +60,80 @@ const Live = (() => {
     return { counts, total: ballots.length };
   }
 
-  function publish(msg) {
-    // Plain-text body keeps this a "simple" CORS request (no preflight).
-    return fetch(url, { method: 'POST', body: JSON.stringify(msg) }).then((r) => {
-      if (!r.ok) throw new Error(`relay ${r.status}`);
+  function request(method, body) {
+    // A string body keeps POST a "simple" CORS request (no preflight).
+    return fetch(url, { method, body }).then((r) => {
+      if (r.ok) return;
+      const err = new Error(`relay ${r.status}`);
+      err.limited = r.status === 429;
+      throw err;
     });
   }
 
-  // onChange(state, msg) after every message; onStatus('live' | 'connecting' | 'offline').
-  function connect({ onChange, onStatus = () => {} }) {
+  const publish = (msg) => request('POST', JSON.stringify(msg));
+
+  // When ntfy's daily allowance comes back, in local time.
+  function resetTime() {
+    const now = new Date();
+    const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    return next.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  // onChange(state) after every change; onStatus('live' | 'connecting' | 'offline').
+  // send: false keeps everything local (practice mode) and never publishes.
+  function connect({ onChange, onStatus = () => {}, send: sending = true }) {
     const state = emptyState();
     const seen = new Set();
     let source;
     let retry;
 
+    function take(id, msg) {
+      if (seen.has(id)) return;
+      seen.add(id);
+      apply(state, msg);
+    }
+
+    // Firebase streams `put` / `patch` events: path "/" is the whole list
+    // (on connect, reconnect, or after a reset), "/<key>" is one new message.
+    function onFirebase(e) {
+      const { path, data } = JSON.parse(e.data);
+      if (path === '/') {
+        if (e.type === 'put') {
+          clear(state);
+          seen.clear();
+        }
+        for (const key of Object.keys(data || {}).sort()) take(key, data[key]);
+      } else if (data && !path.slice(1).includes('/')) {
+        take(path.slice(1), data);
+      }
+      onChange(state);
+    }
+
+    // ntfy streams plain `message` events; since=all replays the cached history.
+    function onNtfy(e) {
+      try {
+        const env = JSON.parse(e.data);
+        if (env.event !== 'message') return;
+        take(env.id, JSON.parse(env.message));
+      } catch {
+        return;
+      }
+      onChange(state);
+    }
+
     function open() {
       clearTimeout(retry);
       source?.close();
       onStatus('connecting');
-      // since=all replays the cached history; `seen` drops repeats on reconnect.
-      source = new EventSource(`${url}/sse?since=all`);
+      source = new EventSource(FIREBASE ? url : `${url}/sse?since=all`);
       source.onopen = () => onStatus('live');
-      source.onmessage = (e) => {
-        let env, msg;
-        try {
-          env = JSON.parse(e.data);
-          if (env.event !== 'message' || seen.has(env.id)) return;
-          seen.add(env.id);
-          msg = JSON.parse(env.message);
-        } catch {
-          return;
-        }
-        apply(state, msg);
-        onChange(state, msg);
-      };
+      if (FIREBASE) {
+        source.addEventListener('put', onFirebase);
+        source.addEventListener('patch', onFirebase);
+        source.addEventListener('cancel', () => onStatus('offline'));
+      } else {
+        source.onmessage = onNtfy;
+      }
       source.onerror = () => {
         // EventSource retries on its own unless the server refused outright.
         if (source.readyState === EventSource.CLOSED) {
@@ -106,11 +159,18 @@ const Live = (() => {
       // Apply locally right away, then send. The echo is idempotent.
       send(msg) {
         apply(state, msg);
-        onChange(state, msg);
-        return publish(msg);
+        onChange(state);
+        return sending ? publish(msg) : Promise.resolve();
+      },
+      // Wipe votes and reveals for the whole room.
+      reset() {
+        clear(state);
+        onChange(state);
+        if (!sending) return Promise.resolve();
+        return FIREBASE ? request('DELETE') : publish({ t: 'x' });
       },
     };
   }
 
-  return { connect, tally };
+  return { connect, tally, resetTime, relay: FIREBASE ? 'firebase' : 'ntfy' };
 })();

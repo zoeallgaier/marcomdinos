@@ -162,14 +162,14 @@ const room = Live.connect({
 function vote(id, guess) {
   const prev = myVote(room.state, id);
   if (prev === guess || room.state.revealed[id]) return;
-  room.send({ t: 'v', v: voter, d: id, g: guess }).catch(() => {
+  room.send({ t: 'v', v: voter, d: id, g: guess }).catch((err) => {
     const ballots = room.state.votes[id];
     if (ballots?.[voter] === guess) {
       if (prev) ballots[voter] = prev;
       else delete ballots[voter];
       render(room.state);
     }
-    toast('Vote didn’t send. Tap again.');
+    toast(err.limited ? 'This Wi-Fi hit its vote limit. Switch to cellular and tap again.' : 'Vote didn’t send. Tap again.');
   });
 }
 
