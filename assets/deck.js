@@ -70,7 +70,7 @@ function titleSlide(qr) {
     <section class="slide slide--title">
       <div class="enter">
         <p class="label label--accent">a field guide</p>
-        <h1 class="title__h1">The Dinosaurs <em>of</em> MarCom</h1>
+        <h1 class="title__h1 split">The Dinosaurs <em>of</em> MarCom</h1>
         <p class="title__sub">Every member of the team, identified down to the species. All real. I checked.</p>
       </div>
       <aside class="ballot-card enter">
@@ -97,7 +97,7 @@ function dinoSlide({ dino }) {
         <img src="assets/img/${dino.id}.jpg" alt="Illustration of a ${dino.species}">
       </figure>
       <div class="sheet">
-        <h2 class="sheet__species enter">${dino.species}</h2>
+        <h2 class="sheet__species split">${dino.species}</h2>
         <div class="sheet__id enter">
           <span class="label">identified as</span>
           <span class="sheet__name"></span>
@@ -115,7 +115,7 @@ function resultsSlide() {
   return `
     <section class="slide slide--results">
       <p class="label label--accent enter">field report</p>
-      <h2 class="section__h enter">How well do we know our own herd?</h2>
+      <h2 class="section__h split">How well do we know our own herd?</h2>
       <div class="report enter"></div>
     </section>`;
 }
@@ -124,7 +124,7 @@ function citedSlide() {
   return `
     <section class="slide slide--cited">
       <p class="label label--accent enter">sources</p>
-      <h2 class="section__h enter">Works cited</h2>
+      <h2 class="section__h split">Works cited</h2>
       <ul class="cited enter">${CITED.map((c) => `<li>${c}</li>`).join('')}</ul>
     </section>`;
 }
@@ -141,6 +141,7 @@ stage.innerHTML = SLIDES.map((s) => {
   return citedSlide();
 }).join('');
 
+splitLetters(stage);
 const slideEls = $$('.slide', stage);
 
 function renderDino(state, id) {
@@ -159,7 +160,9 @@ function renderDino(state, id) {
   const wasRevealed = el.classList.contains('is-revealed');
   el.classList.toggle('is-revealed', Boolean(answer));
   if (Boolean(answer) !== wasRevealed) {
-    $('.sheet__name', el).innerHTML = answer ? `<span>${answer}</span>${ASIDES[id] ? `<span class="sheet__aside">${ASIDES[id]}</span>` : ''}` : '';
+    const name = $('.sheet__name', el);
+    name.innerHTML = answer ? `<span class="split">${answer}</span>${ASIDES[id] ? `<span class="sheet__aside">${ASIDES[id]}</span>` : ''}` : '';
+    splitLetters(name);
   }
 }
 

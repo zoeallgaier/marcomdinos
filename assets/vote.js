@@ -1,9 +1,8 @@
 /* —— Phone ballot ——
-   Follows the presenter by default. Tap a chip to browse, "back to live" to rejoin. */
+   Shows whatever dinosaur the presenter has up. */
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
-const pad = (n) => String(n).padStart(2, '0');
 
 // Stable per-phone id so a changed vote replaces the old one.
 // localStorage can throw (private mode, blocked storage); fall back to memory.
@@ -19,12 +18,8 @@ const voter = (() => {
 })();
 
 const view = $('.view');
-const chips = $('.chips');
-const followBtn = $('.follow');
 const toastEl = $('.toast');
 
-let following = true;
-let browsing = null;
 let shownKey;
 
 const dinoById = (id) => DINOS.find((d) => d.id === id);
@@ -42,7 +37,7 @@ function waitingView() {
   return `
     <section class="waiting">
       <p class="label label--accent">you’re in</p>
-      <h1 class="waiting__h">Hang tight.</h1>
+      <h1 class="waiting__h split">Hang tight.</h1>
       <p>When a dinosaur goes up on screen, it shows up here. Tap the teammate you think it is. You can change your mind until the reveal.</p>
     </section>`;
 }
@@ -51,7 +46,7 @@ function dinoView(dino) {
   return `
     <article class="card">
       <img class="card__img" src="assets/img/${dino.id}.jpg" alt="Illustration of a ${dino.species}">
-      <h1 class="card__species">${dino.species}</h1>
+      <h1 class="card__species split">${dino.species}</h1>
       <p class="prompt">Who is this?</p>
       <div class="names">${ROSTER.map((name) => `<button class="name" data-name="${name}">${name}</button>`).join('')}</div>
       <p class="verdict"></p>
@@ -72,7 +67,7 @@ function recordView() {
   return `
     <section class="record">
       <p class="label label--accent">field report</p>
-      <h1 class="record__h">Your record</h1>
+      <h1 class="record__h split">Your record</h1>
       <p class="record__score label"></p>
       <ol class="ledger"></ol>
     </section>`;
@@ -131,29 +126,10 @@ function updateRecord(state) {
   $('.record__score', view).textContent = scored ? `${right} of ${scored} identified correctly` : 'Nothing revealed yet.';
 }
 
-function renderDrawer(state, key) {
-  chips.innerHTML = DINOS.map((d, i) => {
-    const answer = state.revealed[d.id];
-    const mine = myVote(state, d.id);
-    const cls = ['chip'];
-    if (d.id === key) cls.push('is-current');
-    if (answer && mine) cls.push(mine === answer ? 'is-right' : 'is-wrong');
-    else if (mine) cls.push('is-voted');
-    return `<li><button class="${cls.join(' ')}" data-go="${d.id}">${pad(i + 1)} ${d.species}</button></li>`;
-  }).join('') + '<li><button class="chip chip--record" data-go="record">my record</button></li>';
-
-  followBtn.hidden = following || !state.current;
-
-  const revealed = DINOS.filter((d) => state.revealed[d.id]);
-  const right = revealed.filter((d) => myVote(state, d.id) === state.revealed[d.id]).length;
-  $('.drawer__record').textContent = revealed.length ? `field record: ${right} / ${revealed.length}` : '';
-}
-
-// What the phone should show: the presenter's slide, or whatever was tapped.
+// What the phone should show for the presenter's current slide.
 function viewKey(state) {
-  const target = following ? state.current : browsing;
-  if (target === 'results' || target === 'record') return 'record';
-  if (target) return target;
+  if (state.current === 'results') return 'record';
+  if (state.current) return state.current;
   // Title or works cited: before the game it's a waiting room, after it's your record.
   return Object.keys(state.revealed).length ? 'record' : 'waiting';
 }
@@ -166,11 +142,11 @@ function render(state) {
     if (key === 'waiting') view.innerHTML = waitingView();
     else if (key === 'record') view.innerHTML = recordView();
     else view.innerHTML = dinoView(dinoById(key));
+    splitLetters(view);
   }
 
   if (key === 'record') updateRecord(state);
   else if (key !== 'waiting') updateDino(state, key);
-  renderDrawer(state, key);
 }
 
 /* —— Live room —— */
@@ -200,23 +176,6 @@ function vote(id, guess) {
 view.addEventListener('click', (e) => {
   const btn = e.target.closest('.name');
   if (btn && !btn.disabled) vote(shownKey, btn.dataset.name);
-});
-
-chips.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-go]');
-  if (!btn) return;
-  const go = btn.dataset.go;
-  const live = room.state.current === 'results' ? 'record' : room.state.current;
-  following = go === live;
-  browsing = go;
-  render(room.state);
-  scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-followBtn.addEventListener('click', () => {
-  following = true;
-  render(room.state);
-  scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 render(room.state);

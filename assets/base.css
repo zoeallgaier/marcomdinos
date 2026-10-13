@@ -56,10 +56,20 @@ button {
   pointer-events: none;
 }
 
+/* —— Letter-by-letter headings —— */
+.split .char {
+  animation: letterIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+  animation-delay: calc(var(--i) * 34ms + var(--split-delay, 0s));
+}
+
 /* —— Motion —— */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
   to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+@keyframes letterIn {
+  from { opacity: 0; filter: blur(10px); }
+  to   { opacity: 1; filter: blur(0); }
 }
 @keyframes fadeIn {
   from { opacity: 0; filter: blur(4px); }
