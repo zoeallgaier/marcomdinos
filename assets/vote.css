@@ -75,41 +75,6 @@ body {
   margin: 0 0 14px;
 }
 
-.clues {
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: 20px;
-}
-.clues summary {
-  padding: 12px 0;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--muted);
-}
-.clues ol {
-  margin: 0;
-  padding: 0 0 14px;
-  list-style: none;
-  display: grid;
-  gap: 10px;
-  counter-reset: clue;
-}
-.clues li {
-  counter-increment: clue;
-  display: grid;
-  grid-template-columns: 30px 1fr;
-  font-family: var(--serif);
-  font-size: 19px;
-  line-height: 1.25;
-}
-.clues li::before {
-  content: counter(clue, decimal-leading-zero);
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--accent);
-  padding-top: 5px;
-}
-
 .prompt {
   font-family: var(--serif);
   font-size: 26px;
@@ -131,15 +96,16 @@ body {
   text-align: center;
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.name--wide { grid-column: 1 / -1; }
-.name:hover { border-color: var(--accent); color: var(--accent); }
 .name.is-picked {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--bone);
 }
 .name:disabled { cursor: default; opacity: 0.4; }
-.name:disabled:hover { border-color: var(--rule); color: inherit; }
+/* Phones keep :hover after a tap, so only real pointers get it. */
+@media (hover: hover) {
+  .name:not(:disabled):not(.is-picked):hover { border-color: var(--accent); color: var(--accent); }
+}
 .name.is-answer {
   opacity: 1;
   background: var(--correct);
@@ -209,8 +175,7 @@ body {
   line-height: 0.95;
   margin: 8px 0 14px;
 }
-.waiting p,
-.who p { font-size: 15px; line-height: 1.6; margin: 0 0 20px; }
+.waiting p { font-size: 15px; line-height: 1.6; }
 
 .ledger {
   list-style: none;
@@ -243,9 +208,6 @@ body {
 }
 .follow { font-size: 12px; color: var(--accent); }
 
-.drawer__record { margin-bottom: 6px; }
-.drawer__me button { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-
 .chips {
   list-style: none;
   margin: 0 0 16px;
@@ -264,7 +226,6 @@ body {
 .chip.is-voted::after { content: ' ·'; color: var(--accent); }
 .chip.is-right { color: var(--correct); border-color: var(--correct); }
 .chip.is-wrong { color: var(--accent); border-color: var(--accent); }
-.chip.is-mine { border-style: dashed; }
 .chip--record { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 /* —— Toast —— */

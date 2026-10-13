@@ -11,14 +11,14 @@ Open the deck on the presenting machine. The room scans the QR code on the title
 
 | Key | Does |
 | --- | --- |
-| → / space / clicker | Reveal the name, then next slide |
-| ← | Previous slide |
+| → / space / click / clicker | Next clue (one at a time), then reveal the name, then next slide |
+| ← | Hide the last clue, then previous slide |
 | R | Toggle the reveal |
 | F | Fullscreen |
 
-Move the mouse for the toolbar: reveal, fullscreen, **reset votes** (clears the room after a rehearsal) and connection status.
+Keep one deck tab open while presenting. It's what tells phones which dinosaur is up.
 
-On first scan, phones ask who you are. Your own name is hidden as an option, and your vote on your own dinosaur doesn't count. Votes stay anonymous. Phones show the room's results after each reveal; the live count is on the big screen.
+Move the mouse for the toolbar: reveal, fullscreen, **reset votes** (clears the room after a rehearsal) and connection status.
 
 Phones follow the presenter automatically. People can browse other dinosaurs from the chips at the bottom and tap "back to live" to rejoin.
 

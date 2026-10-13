@@ -145,7 +145,7 @@ const slideEls = $$('.slide', stage);
 
 function renderDino(state, id) {
   const el = $(`[data-dino="${id}"]`, stage);
-  const { counts, total } = Live.tally(state, id, ANSWERS[id]);
+  const { counts, total } = Live.tally(state, id);
   const answer = state.revealed[id];
 
   $('.poll__count', el).textContent = `${total} ${total === 1 ? 'vote' : 'votes'}`;
@@ -165,7 +165,7 @@ function renderDino(state, id) {
 
 function renderReport(state) {
   const rows = DINOS.map((dino, i) => {
-    const { counts, total } = Live.tally(state, dino.id, ANSWERS[dino.id]);
+    const { counts, total } = Live.tally(state, dino.id);
     const right = counts[ANSWERS[dino.id]];
     return { dino, n: i + 1, right, total, pct: total ? Math.round((right / total) * 100) : null };
   });
@@ -191,32 +191,40 @@ function renderReport(state) {
 function render(state) {
   DINOS.forEach((d) => renderDino(state, d.id));
   renderReport(state);
+  // A reveal (or a reload mid-talk) shows every clue on the current slide.
+  const s = SLIDES[index];
+  if (s?.kind === 'dino' && state.revealed[s.dino.id]) setBuilt(s.dino.facts.length);
 }
 
 /* —— Live room —— */
 const statusEl = $('.status');
 const alertEl = $('.alert');
 
+function setAlert(text) {
+  alertEl.textContent = text || '';
+  alertEl.classList.toggle('is-visible', Boolean(text));
+}
+
+// Brief blips are normal. Only speak up if the stream stays down.
+let downTimer;
 const room = Live.connect({
   onChange: render,
   onStatus(s) {
     statusEl.dataset.state = s;
     statusEl.textContent = s;
+    clearTimeout(downTimer);
+    if (s === 'live') setAlert();
+    else downTimer = setTimeout(() => setAlert('Votes aren’t coming through. Reconnecting…'), 5000);
   },
 });
 
 function send(msg) {
-  room.send(msg).then(
-    () => alertEl.classList.remove('is-visible'),
-    () => {
-      alertEl.textContent = 'Couldn’t reach the vote relay. Check the connection.';
-      alertEl.classList.add('is-visible');
-    },
-  );
+  room.send(msg).catch(() => setAlert('Couldn’t reach the vote relay. Check the connection.'));
 }
 
 /* —— Navigation —— */
 let index = Math.min(Math.max((parseInt(location.hash.slice(1), 10) || 1) - 1, 0), SLIDES.length - 1);
+let built = 0; // clues showing on the current dino slide
 let announced;
 let announceTimer;
 
@@ -234,14 +242,22 @@ function announce() {
     if (key === announced) return;
     announced = key;
     send({ t: 's', d: key });
-  }, 700);
+  }, 500);
 }
 
-function go(i) {
+function setBuilt(n) {
+  built = n;
+  $$('.facts li', slideEls[index]).forEach((li, i) => li.classList.toggle('is-shown', i < n));
+}
+
+// Going forward, a dino slide starts with no clues. Going back shows them all.
+function go(i, { full = false } = {}) {
   index = Math.min(Math.max(i, 0), SLIDES.length - 1);
   slideEls.forEach((el, j) => el.classList.toggle('is-active', j === index));
   history.replaceState(null, '', `#${index + 1}`);
   $('.toolbar__count').textContent = `${pad(index + 1)} / ${pad(SLIDES.length)}`;
+  const s = SLIDES[index];
+  if (s.kind === 'dino') setBuilt(full || room.state.revealed[s.dino.id] ? s.dino.facts.length : 0);
   announce();
 }
 
@@ -255,9 +271,18 @@ function toggleReveal(force) {
   return true;
 }
 
-// Forward reveals first, then moves on.
-const next = () => toggleReveal(true) || go(index + 1);
-const prev = () => go(index - 1);
+// Forward: clue, clue, clue, reveal, next slide. Back: un-build clues, then previous slide.
+function next() {
+  const s = SLIDES[index];
+  if (s.kind === 'dino' && built < s.dino.facts.length) setBuilt(built + 1);
+  else if (!toggleReveal(true)) go(index + 1);
+}
+
+function prev() {
+  const s = SLIDES[index];
+  if (s.kind === 'dino' && built > 0 && !room.state.revealed[s.dino.id]) setBuilt(built - 1);
+  else go(index - 1, { full: true });
+}
 
 function fullscreen() {
   if (document.fullscreenElement) document.exitFullscreen();
@@ -279,9 +304,12 @@ addEventListener('keydown', (e) => {
   const action = actions[e.key];
   if (action) {
     e.preventDefault();
+    hideChrome();
     action();
   }
 });
+
+stage.addEventListener('click', next);
 
 $('[data-act="prev"]').addEventListener('click', prev);
 $('[data-act="next"]').addEventListener('click', next);
@@ -289,15 +317,22 @@ $('[data-act="reveal"]').addEventListener('click', () => toggleReveal());
 $('[data-act="full"]').addEventListener('click', fullscreen);
 $('[data-act="reset"]').addEventListener('click', reset);
 
-/* —— Toolbar: shows on mouse movement, gets out of the way otherwise —— */
+/* —— Toolbar + cursor: show on mouse movement, gone a second later —— */
 const toolbar = $('.toolbar');
 let hideTimer;
+
+function hideChrome() {
+  clearTimeout(hideTimer);
+  if (toolbar.matches(':hover')) return;
+  toolbar.classList.remove('is-visible');
+  document.body.classList.add('is-idle');
+}
+
 addEventListener('mousemove', () => {
   toolbar.classList.add('is-visible');
+  document.body.classList.remove('is-idle');
   clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => {
-    if (!toolbar.matches(':hover')) toolbar.classList.remove('is-visible');
-  }, 2500);
+  hideTimer = setTimeout(hideChrome, 1200);
 });
 
 /* —— Fit —— */

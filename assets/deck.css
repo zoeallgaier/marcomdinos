@@ -4,6 +4,8 @@ body {
   overflow: hidden;
   height: 100vh;
 }
+body.is-idle,
+body.is-idle .stage { cursor: none; }
 
 .stage {
   position: absolute;
@@ -13,6 +15,7 @@ body {
   height: 900px;
   transform: translate(-50%, -50%) scale(var(--scale, 1));
   z-index: 1;
+  cursor: pointer;
 }
 
 .slide {
@@ -173,6 +176,16 @@ body {
   font-size: 27px;
   line-height: 1.22;
   counter-increment: fact;
+  /* Hidden but holding its space, so nothing jumps as clues come in. */
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(4px);
+  transition: opacity 0.5s, transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.5s;
+}
+.facts li.is-shown {
+  opacity: 1;
+  transform: none;
+  filter: none;
 }
 .facts li::before {
   content: counter(fact, decimal-leading-zero);
