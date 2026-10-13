@@ -1,0 +1,88 @@
+/* —— Tokens ——
+   Zoe's system (serif carries the human, mono carries the system),
+   recolored with the deck's paleo palette. */
+:root {
+  --bone:  #E7DFD1;
+  --sand:  #B3A58F;
+  --ochre: #D39A3E;
+  --rust:  #A4471F;
+  --moss:  #4E5A39;
+  --umber: #6B5F51;
+  --tar:   #211C17;
+
+  --bg:      var(--bone);
+  --text:    var(--tar);
+  --muted:   var(--umber);
+  --accent:  var(--rust);
+  --correct: var(--moss);
+  --surface: #DDD3C2;
+  --lichen:  #8FA36A;
+  --rule:    rgba(33, 28, 23, 0.18);
+
+  --serif: 'Instrument Serif', serif;
+  --mono:  'Oxygen Mono', monospace;
+}
+
+/* —— Base —— */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dots {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Redacted name mentions inside facts. */
+.redact {
+  background: var(--text);
+  color: transparent;
+  border-radius: 2px;
+  padding: 0 0.15em;
+  user-select: none;
+}
+.redact.is-open {
+  background: none;
+  color: var(--accent);
+  user-select: auto;
+}
+
+/* —— Motion —— */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); filter: blur(5px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; filter: blur(4px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dinosaur Ballot</title>
+  <meta name="description" content="Guess which MarCom teammate is which dinosaur.">
+  <meta name="theme-color" content="#E7DFD1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Oxygen+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/vote.css">
+</head>
+<body>
+  <canvas class="dots" aria-hidden="true"></canvas>
+
+  <header class="top">
+    <p class="top__id"><span class="label--accent">a field guide</span> – the dinosaurs of marcom</p>
+    <span class="status" data-state="connecting">connecting</span>
+  </header>
+
+  <main class="main">
+    <div class="view" aria-live="polite"></div>
+  </main>
+
+  <nav class="drawer" aria-label="All specimens">
+    <div class="drawer__head">
+      <p class="label">all specimens</p>
+      <button class="follow" hidden>back to live →</button>
+    </div>
+    <ol class="chips"></ol>
+    <p class="drawer__record label"></p>
+  </nav>
+
+  <p class="toast" role="status"></p>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/live.js"></script>
+  <script src="assets/dots.js"></script>
+  <script src="assets/vote.js"></script>
+</body>
+</html>

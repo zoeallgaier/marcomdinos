@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Dinosaurs of MarCom</title>
+  <meta name="description" content="A field guide to the IA MarCom team, identified down to the species.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Oxygen+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/deck.css">
+</head>
+<body>
+  <canvas class="dots" aria-hidden="true"></canvas>
+
+  <main class="stage" aria-live="polite"></main>
+
+  <nav class="toolbar" aria-label="Presenter controls">
+    <button data-act="prev" aria-label="Previous slide">←</button>
+    <span class="toolbar__count">01 / 14</span>
+    <button data-act="next" aria-label="Next slide">→</button>
+    <span class="toolbar__sep"></span>
+    <button data-act="reveal">reveal (r)</button>
+    <button data-act="full">fullscreen (f)</button>
+    <button data-act="reset">reset votes</button>
+    <span class="toolbar__sep"></span>
+    <span class="status" data-state="connecting">connecting</span>
+  </nav>
+  <p class="alert" role="status"></p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/live.js"></script>
+  <script src="assets/dots.js"></script>
+  <script src="assets/deck.js"></script>
+</body>
+</html>
